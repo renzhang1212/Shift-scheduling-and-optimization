@@ -1,108 +1,167 @@
 ﻿<%@ Page Title="Home Page" Language="C#" MasterPageFile="~/Site.Master" AutoEventWireup="true" CodeFile="Default.aspx.cs" Inherits="_Default" %>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="MainContent" runat="server">
-    <!doctype html>
-<html lang="en-au">
+    <!DOCTYPE html>
+    <html lang="en">
     <head>
-        <title>jQuery.Gantt - Test Suite 01</title>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=Edge;chrome=1" >
-        <link rel="stylesheet" href="css/style.css" />
-        <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="http://taitems.github.com/UX-Lab/core/css/prettify.css" />
-		<style type="text/css">
-			body {
-				font-family: Helvetica, Arial, sans-serif;
-				font-size: 13px;
-				padding: 0 0 50px 0;
-			}
-			.contain {
-				width: 800px;
-				margin: 0 auto;
-			}
-			h1 {
-				margin: 40px 0 20px 0;
-			}
-			h2 {
-				font-size: 1.5em;
-				padding-bottom: 3px;
-				border-bottom: 1px solid #DDD;
-				margin-top: 50px;
-				margin-bottom: 25px;
-			}
-			table th:first-child {
-				width: 150px;
-			}
-         
-		</style>
+        <meta charset="UTF-8">
+        <title>Shift scheduling in ATC</title>
     </head>
     <body>
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css" />
+        <style>
+            body {
+                font-family: Roboto, Times;
+            }
 
-		<div class="contain">
+            h1 {
+                display: inline-block;
+            }
+        </style>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="dist/jquery.stacked-gantt.css">
 
-			<h1>
-				jQuery.Gantt
-				<small>&mdash; Test Suite 01</small>
-			</h1>
+        <script src="libs/jquery/jquery.js"></script>
+        <script src="dist/jquery.stacked-gantt.js"></script>
+        <script>
 
-			<p>
-				<strong>Expected behaviour:</strong> Gantt bar should run from "now" until 2 hours from now. It fails when all the bars are docked left at the hour view.
-			</p>
+            function createDate(time, daysToSum) {
+                var split = time.split(' ');
+                var dates = split[0].split('/');
+                var times = split[1].split(':');
+                var ret = new Date(dates[0], parseInt(dates[1]) - 1, dates[2], times[0], times[1], 0, 0);
+            
+                if (daysToSum) ret.setDate(ret.getDate() + daysToSum);
+                return ret;
+            }
 
-			<p>
-				<strong>Manual validation:</strong>
-				<ul>
-					<li>Passing</li>
-				</ul>
-			</p>
-				
-			<div class="gantt"></div>
+            var employees = ["William Nation", "Carmelita Mcfee", "Flo Lightle", "Ute Gough", "Cassy Fegley", "Vernie Englehart", "Dante Pettigrew", "Hershel Buller",
+            "Leeann Mcwaters", "Valrie Jasper", "Chelsey Franchi", "Romaine Georges", "Charlyn Fleishman", "Ilona Lall", "Librada Huth", "Cayla Luechtefeld",
+            "Sha Chrysler"].sort();
+            var startDateInStr = '2018/6/4 07:00';
+            var endDateInStr = '2018/6/30 23:59';
+            var data = employees.map(e =>({ "description": e, "activities": [{ code: 'STR', description: 'Start', begin: createDate(startDateInStr), end: createDate(startDateInStr) }, { code: 'END', description: 'End', begin: createDate(endDateInStr), end: createDate(endDateInStr) }] }));
+            
+            var generalMarkers = [
+                {
+                    description: "Start of the schedule", when: createDate(startDateInStr), color: "#e942cd", width: "5px",
+                    onClick: function (marker) {
+                       // alert(marker.description);
+                    }
+                }, {
+                    description: "End of the schedule", when: createDate(endDateInStr), color: "#e942cd", width: "5px",
+                    onClick: function (marker) {
+                        // alert(marker.description);
+                    }
+                }
+            ];
+
+            var generalHighlights = [
+                { begin: createDate('2018/6/1 08:00'), end: createDate('2018/6/1 18:00'), color: "#5cea67" },
+                { begin: createDate('2018/6/1 20:00'), end: createDate('2018/6/1 02:15', 1) },
+            ];
+            var activityStyles = {
+                'STDUP': { color: "#8e87ea", height: "30px" },
+                'SB': { color: "#8e87ea", height: "30px" },
+                'DEV': { color: "#ea8787" },
+                'DEVOPS': { color: "#e8e44e" },
+            };
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var options = {
+                data: data,
+                generalMarkers: generalMarkers,
+                style: {
+                    months: months,
+                    activityStyle: activityStyles,
+                    showDateOnHeader: true,
+                    dateHeaderFormat: function (date) {
+                        var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+                        return days[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate() + "th - " + date.getFullYear();
+                    },
+                    descriptionContainerWidth: '200px'
+                }
+            };
+            var shiftPatterns = [{ "days": "1,2,3,4,5,6,7", start: "07:00", end: "16:00", quantity: 15, "description": "Day shifts" },
+                { "days": "1,2,3,4,5,6,7", start: "15:00", end: "24:00", quantity: 15, "description": "Evening shifts" },
+                { "days": "1,2,3,4,5,6,7", start: "23:00", end: "32:00", quantity: 15, "description": "Midnight shifts" }];
+            var data2 = [];
+            var totalShifts = [];
+            for (var i = 0; i < shiftPatterns.length; i++) {
+                var shiftBanks = [];
+                for (var d = createDate(startDateInStr, 0) ; d <= createDate(startDateInStr, 30) ; d.setDate(d.getDate() + 1)) {
+                    var shiftPattern = shiftPatterns[i];
+                    var dateInStr = d.getFullYear() + "/" + (d.getMonth() +1) + "/" + d.getDate();
+                    var shift = { code: "SB", description: shiftPattern.description, "shiftNumber": shiftPattern.quantity, begin: createDate(dateInStr + " " + shiftPattern.start), end: createDate(dateInStr + " " + shiftPattern.end) };
+                    shiftBanks.push(shift);
+                    totalShifts.push(shift);
+                }
+                data2.push({ "description": shiftPattern.description, "activities": shiftBanks });
+            }
+            var options2 = {
+                data: data2,
+                generalMarkers: generalMarkers,
+                style: {
+                    months: months,
+                    activityStyle: activityStyles,
+                    showDateOnHeader: true,
+                    dateHeaderFormat: function (date) {
+                        var days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+                        return days[date.getDay()] + ", " + months[date.getMonth()] + " " + date.getDate() + "th - " + date.getFullYear();
+                    },
+                    descriptionContainerWidth: '200px'
+                }
+            };
+            $(document).ready(function () {
+                var $timeline = $('#timeline').stackedGantt(options);
+                var $timeline = $('#shiftbank').stackedGantt(options2);
+            });
+
+  	</script>
+
+        <div>
+            <h1>Shift scheduleing in ATC</h1>
+          
+        </div>
+   
+         <button type="button" id="optimizeBtn"class="btn btn-success">Optimize shift assignment</button>
+          <br />
+           <br />
+        <div id="shiftbank" style="width: 100%"></div>
+        <br />
+       
+        <br />
+        <div id="timeline" style="width: 100%"></div>
 
 
     </body>
-	<script src="js/jquery.min.js"></script>
-	<script src="js/jquery.fn.gantt.js"></script>
-	<script src="moment.min.js"></script>
-	<script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
-	<script src="http://taitems.github.com/UX-Lab/core/js/prettify.js"></script>
+    </html>
     <script>
+        $(document).ready(function () {
+            var formBasic = function () {
+                $.ajax({
+                    type: 'POST',
+                    data: { "employees" : JSON.stringify(data), "shifts" : JSON.stringify(totalShifts)},
+                    dataType: 'json',
+                    url: 'optimize.aspx',
+                    error: function (request, err) {
+                        alert(err);
+                        return false;
+                    },
+                    complete: function (output) {
+                        alert(output.responseText);
+                    }
+                });
+                return false;
+            };
 
-		$(function() {
-
-			"use strict";
-
-			var today = moment();
-			var andTwoHours = moment().add("days",30);
-
-			var today_friendly = "/Date(" + today.valueOf() + ")/";
-			var next_friendly = "/Date(" + andTwoHours.valueOf() + ")/";
-
-			$(".gantt").gantt({
-				source: [{
-					name: "Testing",
-					desc: " ",
-					values: [{
-						from: today_friendly,
-						to: next_friendly,
-						label: "Test", 
-						customClass: "ganttRed"
-					}]
-				}],
-				scale: "hours",
-				minScale: "hours",
-				navigate: "scroll"
-			});
-
-			$(".gantt").popover({
-				selector: ".bar",
-				title: "I'm a popover",
-				content: "And I'm the content of said popover.",
-				trigger: "hover"
-			});
-
-		});
-
+            $("#optimizeBtn").on("click", function (e) {
+                e.preventDefault();
+                formBasic();
+            });
+        });
     </script>
-</html>
-    </div>
 </asp:Content>
